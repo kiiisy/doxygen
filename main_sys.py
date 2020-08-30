@@ -27,7 +27,6 @@ END_MARK = '/*\n'
 
 doxygen_comment = ['@brief', '@details', '@param', '@return']
 
-
 class TKroot(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -40,6 +39,7 @@ class Application(tk.Frame):
     def __init__(self, master = None, **kwargs):
         super().__init__(master, **kwargs)
         self.__function_name = tk.StringVar()
+        self.__file_path = tk.StringVar()
         self.__entry_values = []
         self.__comment = []
         self.__all_target_state = tk.BooleanVar()
@@ -49,82 +49,89 @@ class Application(tk.Frame):
         self.pack()
 
     def create_widget(self): 
-        #create frame 1.
-        self.f1 = tk.Frame(self)
-        self.f1.place(relheight = 0.1, width = 1000, height = 50, x = 20)
-        self.f1_label = tk.Label(self.f1, text = 'path')
-        self.f1_label.grid(row = 0, column = 0, ipadx = 50, pady = 25)
-        self.file_path = tk.StringVar()
-        self.f1_entry = tk.Entry(self.f1, width = 80, textvariable = self.file_path)
-        self.f1_entry.grid(row = 0, column = 1, padx = 10)
-        self.f1_button = tk.Button(self.f1, text = 'update', width = 5, command = self.update)
-        self.f1_button.grid(row = 0, column = 2, ipadx = 30, ipady = 10, padx = 20)
+        #create frame 1. -----------------------------------------------------
+        f1 = tk.Frame(self)
+        f1.place(relheight = 0.1, width = 1000, height = 50, x = 20)
+        f1_label = tk.Label(f1, text = 'path')
+        f1_label.grid(row = 0, column = 0, ipadx = 50, pady = 25)
+        f1_entry = tk.Entry(f1, width = 80, textvariable = self.__file_path)
+        f1_entry.grid(row = 0, column = 1, padx = 10)
+        f1_button = tk.Button(f1, text = 'update', width = 5, 
+            command = self.update)
+        f1_button.grid(row = 0, column = 2, ipadx = 30, ipady = 10, padx = 20)
+        #---------------------------------------------------------------------
 
-        #create frame 2.
-        self.f2 = tk.Frame(self)
-        self.f2.place(width = 1000, y = 64, x = 20)
-        self.f2_label = tk.Label(self.f2, text = 'function name')
-        self.f2_label.grid(row = 0, column = 0, ipadx = 20)
+        #create frame 2. -----------------------------------------------------
+        f2 = tk.Frame(self)
+        f2.place(width = 1000, y = 64, x = 20)
+        f2_label = tk.Label(f2, text = 'function name')
+        f2_label.grid(row = 0, column = 0, ipadx = 20)
         self.__function_name.set('')
-        self.f2_opt = tk.OptionMenu(self.f2, self.__function_name, '')
-        self.f2_opt.config(width = 80)
-        self.f2_opt.grid(row = 0, column = 1, padx = 10)
+        self.__f2_opt = tk.OptionMenu(f2, self.__function_name, '')
+        self.__f2_opt.config(width = 80)
+        self.__f2_opt.grid(row = 0, column = 1, padx = 10)
         self.__all_target_state.set(False)
-        self.f2_chk_button = tk.Checkbutton(self.f2, text = '全対象',
+        f2_chk_button = tk.Checkbutton(f2, text = '全対象',
             variable = self.__all_target_state)
-        self.f2_chk_button.grid(row = 0, column = 2, ipady = 10, padx = 20)
+        f2_chk_button.grid(row = 0, column = 2, ipady = 10, padx = 20)
+        #---------------------------------------------------------------------
 
-        #create frame 3.
-        self.f3 = tk.Frame(self)
-        self.f3.place(width = 150, x = 10, y = 120, height = 500)
+        #create frame 3. -----------------------------------------------------
+        f3 = tk.Frame(self)
+        f3.place(width = 150, x = 10, y = 120, height = 500)
         global doxygen_comment
         for i in range(WIDGET_NUMBER):
             self.__comment.append(tk.StringVar())
             self.__comment[i].set(doxygen_comment[i])
-            self.f3_cb = ttk.Combobox(self.f3, textvariable = self.__comment[i], 
+            self.f3_cb = ttk.Combobox(f3, textvariable = self.__comment[i], 
                 values = doxygen_comment, width = 10, state = 'readonly')
             self.f3_cb.grid(pady = 4, padx = 20)
+        #---------------------------------------------------------------------
 
-        #create frame 4.
-        self.f4 = tk.Frame(self)
-        self.f4.place(width = 660, x = 160, y = 120, height = 500)
+        #create frame 4. -----------------------------------------------------
+        f4 = tk.Frame(self)
+        f4.place(width = 660, x = 160, y = 120, height = 500)
         for i in range(WIDGET_NUMBER):
             self.__entry_values.append(tk.StringVar())
-            self.f4_entry = tk.Entry(self.f4, width = 80,
+            self.f4_entry = tk.Entry(f4, width = 80,
                 textvariable = self.__entry_values[i])
             self.f4_entry.grid(pady = 4)
+        #---------------------------------------------------------------------
 
-        #create frame 5.
-        self.f5 = tk.Frame(self)
-        self.f5.place(width = 140, x = 830, y = 120, height = 180)
-        self.f5_run_button = tk.Button(self.f5, text = 'run', width = 10,
-            height = 2, command = lambda :self.run(comment = self.__comment,
-            function_name = self.__function_name, entry_values = self.__entry_values,
-            save_type = self.sub_f2_chk_button))
-        self.f5_run_button.grid(row = 0, padx = 20, ipady = 10)
-        self.f5_option_button = tk.Button(self.f5, text = 'option', width = 10,
+        #create frame 5. -----------------------------------------------------
+        f5 = tk.Frame(self)
+        f5.place(width = 140, x = 830, y = 120, height = 180)
+        f5_option_button = tk.Button(f5, text = 'option', width = 10,
             height = 0, command = self.option)
-        self.f5_option_button.grid(row = 1, pady = 20)
+        f5_option_button.grid(row = 0, pady = 20)
+        f5_run_button = tk.Button(f5, text = 'run', width = 10,
+            height = 2, command = lambda :self.run(comment = self.__comment,
+            function_name = self.__function_name, 
+            entry_values = self.__entry_values,
+            save_type = self.sub_f2_chk_button))
+        f5_run_button.grid(row = 1, padx = 20, ipady = 10)
+        #---------------------------------------------------------------------
 
     def update(self):
-        file_path = self.__updatecheck(self.file_path.get())
+        file_path = self.__updatecheck(self.__file_path.get())
         if file_path.exsist():
-            extraction = self.__extraction(self.file_path.get())
-            self.file_contents = extraction.manage(Read)
-            opt = self.f2_opt['menu']
+            extraction = self.__extraction(self.__file_path.get())
+            file_contents = extraction.manage(Read)
+            opt = self.__f2_opt['menu']
             opt.delete(0, 'last')
-            for line in self.file_contents:
-                opt.add_command(label = line.strip(), command = tk._setit(self.__function_name, line))
-            self.__function_name.set(self.file_contents[0])
+            for file_content in file_contents:
+                opt.add_command(label = file_content.strip(), 
+                    command = tk._setit(self.__function_name, file_content))
+            self.__function_name.set(file_contents[0])
 
     def run(self, **kwargs):
         all_or_partof = self.__judge_all_or_partof(**kwargs)
-        file_path = self.file_path.get()
+        file_path = self.__file_path.get()
         doxygen_comment = self.__runcheck(file_path)
         if doxygen_comment.exsist():
             messagebox.showerror('警告', 'コード内にDoxygenコメントが存在しています')
             return
-        all_or_partof.manage(self.file_path)
+        all_or_partof.manage(self.__file_path)
         messagebox.showinfo('通知', '完了しました')
 
     def __extraction(self, file_path):
@@ -193,7 +200,8 @@ class Extraction:
 
     def __set_items(self, function_list):
         regular_expression = self.__regular_expression()
-        self.__file_contents = regular_expression.get_function_name(function_list, self.regular_expression)
+        self.__file_contents = regular_expression.get_function_name(
+            function_list, self.regular_expression)
 
     def manage(self, file_type):
         self.__set_items(self.__get_items(file_type))
@@ -237,7 +245,8 @@ class RegularExpression:
         if index == None or cnt == None:
             return True if re.match(regular_expression, items) else False
         else:
-            return True if re.match(regular_expression, items[index - cnt]) else False 
+            return True if re.match(regular_expression, 
+                items[index - cnt]) else False 
 
 
 class FileType(abc.ABC):
@@ -262,7 +271,8 @@ class Write(FileType):
             file_path = self.__file_path
         else:
             file_path = (os.path.dirname(self.__file_path) + '/'
-            + os.path.splitext(os.path.basename(self.__file_path))[0] + '_d' + '.c')
+                + os.path.splitext(os.path.basename(self.__file_path))[0]
+                + '_d' + '.c')
         with FileAccess(file_path, 'w') as file:
             file.writelines(self.__input_contents)
         return None
@@ -364,8 +374,10 @@ class PartOfInsertion(Insertion):
         super()._get_contents(Read, file_path_)
         list_ = super()._list(self.file_contents)
         super()._get_function_index(self.file_contents, self.function_name)
-        edited_file_contents = list_.create_partof(self.function_index, **self.__kwargs)
-        super()._set_contents(Write, file_path_, edited_file_contents, self._save_type)
+        edited_file_contents = list_.create_partof(self.function_index,
+                                                  **self.__kwargs)
+        super()._set_contents(Write, file_path_, edited_file_contents,
+                            self._save_type)
 
 
 class AllInsertion(Insertion):
@@ -378,9 +390,11 @@ class AllInsertion(Insertion):
         super()._get_contents(Read, file_path_)
         list_ = super()._list(self.file_contents)
         regular_expression = self.__regular_expression()
-        function_dict = regular_expression.get_function_name_and_index(self.file_contents, REGEX_FUNCTION_NAME)
+        function_dict = regular_expression.get_function_name_and_index(
+            self.file_contents, REGEX_FUNCTION_NAME)
         edited_file_contents = list_.create_all(function_dict)
-        super()._set_contents(Write, file_path_, edited_file_contents, self._save_type)
+        super()._set_contents(Write, file_path_, edited_file_contents,
+                                self._save_type)
 
     def __regular_expression(self):
         #instance RegularExpression class
@@ -398,7 +412,8 @@ class List:
         self.__doxygen_comment = comment.create_partof(**kwargs)
         self.__file_contents = self.__input_file_contents
         for i in range(len(self.__doxygen_comment)):
-            self.__file_contents.insert(function_index + i, self.__doxygen_comment[i])
+            self.__file_contents.insert(function_index + i, 
+                                        self.__doxygen_comment[i])
         return self.__file_contents
 
     def create_all(self, function_dict):
@@ -406,8 +421,10 @@ class List:
         i = 0
         for key, value in function_dict.items():
             comment = self.__comment()
-            self.__doxygen_comment = comment.create_all(self.__input_file_contents, key, value)
-            self.__file_contents[(value) + i:(value) + i] = self.__doxygen_comment
+            self.__doxygen_comment = comment.create_all(
+                self.__input_file_contents, key, value)
+            self.__file_contents[(value) + i:(value) + i]\
+                = self.__doxygen_comment
             i = i + comment.get_doxygen_comment_number()
         return self.__file_contents
 
@@ -426,8 +443,9 @@ class Comment:
     def create_partof(self, **kwargs):
         self.__doxygen_comment.append('/*\n')
         for i in range(WIDGET_NUMBER):
-            self.__doxygen_comment.append('*' + ' ' + kwargs.get('comment')[i].get() + ' ' 
-            + kwargs.get('entry_values')[i].get() + '\n')
+            self.__doxygen_comment.append('*' + ' '
+                + kwargs.get('comment')[i].get() + ' ' 
+                + kwargs.get('entry_values')[i].get() + '\n')
         self.__doxygen_comment.append('*/\n')
         return self.__doxygen_comment
 
@@ -439,7 +457,8 @@ class Comment:
         self.__doxygen_comment.append('/*\n')
         regex_lists = [REGEX_BRIEF, REGEX_DETAILS, REGEX_PARAM, REGEX_RETRUN] 
         for regex_list in regex_lists:
-            comments = self.__edit_comments(object_, file_contents, regex_list)
+            comments = self.__edit_comments(object_,
+                                            file_contents, regex_list)
             self.__create_list(comments)
         self.__doxygen_comment.append('*/\n')
         return self.__doxygen_comment
@@ -455,7 +474,9 @@ class Comment:
         comments = regular_expression.create_comment(before_list, regex)
         selected_comment = self.__select_doxygen_comment(regex)
         for comment in comments:
-            fixed_comment.append(('*' + ' ' + selected_comment + ' ' + comment.group(1) + '\n'))
+            fixed_comment.append(('*' + ' ' 
+                + selected_comment + ' ' 
+                + comment.group(1) + '\n'))
         return fixed_comment
 
     def __select_doxygen_comment(self, regex):
@@ -494,8 +515,10 @@ class Lookup:
         comment = self.__regular_expression()
         i = 0
         while file_contents[self.__function_index - i] != END_MARK:
-            if comment.exist(file_contents, comment_type, self.__function_index, i):
-                return_comments.append(file_contents[self.__function_index - i])
+            if comment.exist(file_contents, comment_type, 
+                                self.__function_index, i):
+                return_comments.append(
+                    file_contents[self.__function_index - i])
                 brank_comment = self.__get_brank_comment(file_contents, i)
                 return_comments.extend(brank_comment)
                 return return_comments
@@ -552,10 +575,11 @@ class RunCheck:
         #instance RegularExpression class
         return RegularExpression()
 
+
 def main():
     root = TKroot()
     app = Application(master = root, width = 1000, height = 300)
     app.mainloop()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

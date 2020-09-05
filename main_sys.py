@@ -22,6 +22,7 @@ REGEX_BRANK =  r'//\s*：(.*)$'
 #REGEX_PARAM = r'\*\s*ARGUMENT\s*：(.*)$'
 #REGEX_RETRUN = r'\*\s*RETURN\s*：(.*)$'
 #REGEX_BRANK =  r'\*\s*：(.*)$'
+REGEX_DOXYGEN_CHECK = r'\*\s@brief.*$'
 COMMENT_LENGTH_MIN = 1
 END_MARK = '/*\n'
 
@@ -190,63 +191,76 @@ class Application(tk.Frame):
 class Extraction:
     def __init__(self, regex, file_path):
         self.__file_path = file_path
-        self.__file_contents = None
-        self.regular_expression = (REGEX_FUNCTION_NAME if 
-            regex is None else regex)
+        self.__regex = (REGEX_FUNCTION_NAME if regex is None else regex)
 
-    def __get_items(self, file_type_):
+    def __read_items(self, file_type_):
         file_type = self.__file_type(file_type_)
         return file_type.execute()
 
-    def __set_items(self, function_list):
-        regular_expression = self.__regular_expression()
-        self.__file_contents = regular_expression.get_function_name(
-            function_list, self.regular_expression)
+    def __edit_items(self, target_list):
+        edited_list = []
+        regular_expression = self.__regular_expression(target_list, self.__regex)
+        target_dict = regular_expression.get_function_name_and_index()
+        for target_name, target_index in target_dict.items():
+            if self.__not_exist_doxygen(target_list, target_index):
+                edited_list.append(target_name)
+        return edited_list
 
     def manage(self, file_type):
-        self.__set_items(self.__get_items(file_type))
-        return self.__file_contents
+        target_list = self.__read_items(file_type)
+        file_contens = self.__edit_items(target_list)
+        return file_contens
 
     def __file_type(self, file_type, *args):
         #instance Write or Read class
         return file_type(self.__file_path)
 
-    def __regular_expression(self):
+    def __regular_expression(self, items, regex):
         #instance RegularExpression class
-        return RegularExpression()
+        return RegularExpression(items, regex)
+
+    def __not_exist_doxygen(self, target_list, target_index):
+        i = 0
+        while target_list[target_index - i] != END_MARK:
+            doxygen_comment = self.__regular_expression(target_list[target_index - i], REGEX_DOXYGEN_CHECK)
+            if doxygen_comment.exist():
+                return False
+            i = i + 1
+        return True
 
 
 class RegularExpression:
-    def get_function_name(self, items, regular_expression):
-        return [s for s in items if re.match(regular_expression, s)]
+    def __init__(self, items, regex):
+        self.__items = items
+        self.__regex = regex
 
-    def get_function_name_and_index(self, items, regular_expression):
+    def get_function_name_and_index(self):
         name_and_index = {}
-        for index, item in enumerate(items):
-            if re.match(regular_expression, item):
+        for index, item in enumerate(self.__items):
+            if re.match(self.__regex, item):
                 name_and_index.update([(item, index)])
         return name_and_index
 
-    def create_comment(self, items, regular_expression):
+    def create_comment(self):
         comment = []
         try:
-            if len(items) > COMMENT_LENGTH_MIN:
-                comment.append(re.match(regular_expression, items[0]))
-                for item in items[1:]:
+            if len(self.__items) > COMMENT_LENGTH_MIN:
+                comment.append(re.match(self.__regex, self.__items[0]))
+                for item in self.__items[1:]:
                     comment.append(re.match(REGEX_BRANK, item))
             else:
-                comment.append(re.match(regular_expression, items[0]))
+                comment.append(re.match(self.__regex, self.__items[0]))
             return comment
         except TypeError:
             messagebox.showerror('エラー', '前提条件違反です。処理を終了します。')
             sys.exit()
 
-    def exist(self, items, regular_expression, index=None, cnt=None):
+    def exist(self, index=None, cnt=None):
         if index == None or cnt == None:
-            return True if re.match(regular_expression, items) else False
+            return True if re.match(self.__regex, self.__items) else False
         else:
-            return True if re.match(regular_expression, 
-                items[index - cnt]) else False 
+            return True if re.match(self.__regex, 
+                self.__items[index - cnt]) else False 
 
 
 class FileType(abc.ABC):
@@ -389,16 +403,15 @@ class AllInsertion(Insertion):
         file_path_ = file_path.get()
         super()._get_contents(Read, file_path_)
         list_ = super()._list(self.file_contents)
-        regular_expression = self.__regular_expression()
-        function_dict = regular_expression.get_function_name_and_index(
-            self.file_contents, REGEX_FUNCTION_NAME)
+        regular_expression = self.__regular_expression(self.file_contents, REGEX_FUNCTION_NAME)
+        function_dict = regular_expression.get_function_name_and_index()
         edited_file_contents = list_.create_all(function_dict)
         super()._set_contents(Write, file_path_, edited_file_contents,
                                 self._save_type)
 
-    def __regular_expression(self):
+    def __regular_expression(self, items, regex):
         #instance RegularExpression class
-        return RegularExpression()
+        return RegularExpression(items, regex)
 
 
 class List:
@@ -437,8 +450,8 @@ class Comment:
     def __init__(self):
         self.__doxygen_comment = []
 
-    def __del__(self):
-        pass
+    #def __del__(self):
+    #    pass
 
     def create_partof(self, **kwargs):
         self.__doxygen_comment.append('/*\n')
@@ -470,8 +483,8 @@ class Comment:
     def __edit_comments(self, object_, file_contents, regex):
         fixed_comment = []
         before_list = object_.get_comment(file_contents, regex)
-        regular_expression = self.__regular_expression()
-        comments = regular_expression.create_comment(before_list, regex)
+        regular_expression = self.__regular_expression(before_list, regex)
+        comments = regular_expression.create_comment()
         selected_comment = self.__select_doxygen_comment(regex)
         for comment in comments:
             fixed_comment.append(('*' + ' ' 
@@ -494,9 +507,9 @@ class Comment:
         #instance Lookup class
         return Lookup(function_name, function_index)
 
-    def __regular_expression(self):
+    def __regular_expression(self, items, regex):
         #instance RegularExpression class
-        return RegularExpression()
+        return RegularExpression(items, regex)
 
     def get_doxygen_comment_number(self):
         return len(self.__doxygen_comment)
@@ -507,16 +520,15 @@ class Lookup:
         self.__function_name = function_name
         self.__function_index = function_index
 
-    def __del__(self):
-        pass
+    #def __del__(self):
+    #    pass
 
     def get_comment(self, file_contents, comment_type):
         return_comments = []
-        comment = self.__regular_expression()
         i = 0
         while file_contents[self.__function_index - i] != END_MARK:
-            if comment.exist(file_contents, comment_type, 
-                                self.__function_index, i):
+            comment = self.__regular_expression(file_contents, comment_type)
+            if comment.exist(self.__function_index, i):
                 return_comments.append(
                     file_contents[self.__function_index - i])
                 brank_comment = self.__get_brank_comment(file_contents, i)
@@ -528,19 +540,19 @@ class Lookup:
 
     def __get_brank_comment(self, file_contents, cnt):
         return_comments = []
-        brank_comment = self.__regular_expression()
         #対象を含ませないために+1とする
         hit_index = (self.__function_index - cnt) + 1
         for file_content in file_contents[hit_index:]:
-            if brank_comment.exist(file_content, REGEX_BRANK):
+            brank_comment = self.__regular_expression(file_content, REGEX_BRANK)
+            if brank_comment.exist():
                 return_comments.append(file_content)
             else:
                 break
         return return_comments
 
-    def __regular_expression(self):
+    def __regular_expression(self, items, regex):
         #instance RegularExpression class
-        return RegularExpression()
+        return RegularExpression(items, regex)
 
 
 class UpdateCheck:
@@ -560,10 +572,10 @@ class RunCheck:
         self.read = self.__read(file_path)
 
     def exsist(self):
-        doxygen_comment = self.__regular_expression()
         file_contents = self.read.execute()
         for file_content in file_contents:
-            if doxygen_comment.exist(file_content, r'\*\s@brief.*$'):
+            doxygen_comment = self.__regular_expression(file_content, REGEX_DOXYGEN_CHECK)
+            if doxygen_comment.exist():
                 return True
         return False
 
@@ -571,9 +583,9 @@ class RunCheck:
         #instance Read class
         return Read(file_path)
 
-    def __regular_expression(self):
+    def __regular_expression(self, items, regex):
         #instance RegularExpression class
-        return RegularExpression()
+        return RegularExpression(items, regex)
 
 
 def main():

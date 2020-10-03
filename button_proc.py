@@ -2,10 +2,6 @@ import regular_expression as re
 import file_proc as fproc
 import const
 
-#const list
-START_COMMENT = '/**\n'
-END_COMMENT = '*/\n'
-
 
 class Extraction:
     def __init__(self, regex, file_path):
@@ -141,7 +137,7 @@ class Comment:
         self.__doxygen_comment = []
 
     def create_part(self, **kwargs):
-        self.__doxygen_comment.append(START_COMMENT)
+        self.__doxygen_comment.append(const.START_COMMENT)
         for i in range(const.WIDGET_NUMBER):
             self.__doxygen_comment.append('*'
                 + ' '
@@ -149,7 +145,7 @@ class Comment:
                 + ' '
                 + kwargs.get('entry_values')[i].get()
                 + '\n')
-        self.__doxygen_comment.append(END_COMMENT)
+        self.__doxygen_comment.append(const.END_COMMENT)
         return self.__doxygen_comment
 
     def create_all(self, file_contents, target_index):
@@ -160,14 +156,14 @@ class Comment:
         return len(self.__doxygen_comment)
 
     def __create_comment_list(self, file_contents, object_):
-        self.__doxygen_comment.append(START_COMMENT)
+        self.__doxygen_comment.append(const.START_COMMENT)
         regex_lists = [
                         re.REGEX_BRIEF, re.REGEX_DETAILS,
                         re.REGEX_PARAM, re.REGEX_RETRUN] 
         for regex_list in regex_lists:
             comments = self.__edit_comments(object_, file_contents, regex_list)
             self.__create_list(comments)
-        self.__doxygen_comment.append(END_COMMENT)
+        self.__doxygen_comment.append(const.END_COMMENT)
         return self.__doxygen_comment
 
     def __create_list(self, comments):

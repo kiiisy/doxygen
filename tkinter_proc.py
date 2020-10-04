@@ -114,14 +114,10 @@ class Application(tk.Frame):
             self.__target_name.set(extracted_contents[0])
 
     def run(self, **kwargs):
-        # If this available, you can check 
-        # before-error which is doxygen 
-        # already exist in this code.
         '''
         file_contents = self.__read_items()
         doxygen_comment = self.__run_error_check(file_contents)
         all_target_is_checked = self.__get_all_target_state()
-        all target button is checked and doxyten comment exists. 
         if doxygen_comment.exist() and all_target_is_checked:
             messagebox.showerror('警告', 'コード内にDoxygenコメントが存在しています')
             return

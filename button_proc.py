@@ -61,7 +61,7 @@ class Insertion(object):
         return fproc.Read(file_path)
 
     def __write(self, file_path, *arg):
-        #instance Read class
+        #instance Write class
         return fproc.Write(file_path, *arg)
 
 

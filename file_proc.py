@@ -2,19 +2,15 @@ import abc
 import os
 import option as op
 
-
-#test_path = '/Users/kisa/PYTHON/01_Practice/tmp/test.c'
+#This is for test.
+#test_path = '/Users/kisa/python/04_tool/doxygen/test/test.c'
 
 
 class FileType(abc.ABC):
     @abc.abstractclassmethod
     def lines(self):
         pass
-'''
-    def execute(self):
-        lines = self.lines()
-        return lines
-'''
+
 
 class Write(FileType):
     def __init__(self, file_path, *args):

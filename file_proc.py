@@ -20,10 +20,9 @@ class Write(FileType):
         self.__overwrite_button = self.__save_type(args[1])
 
     def lines(self):
+        file_path = self.__create_file_path()
         if self.__overwrite_button.is_checked():
             file_path = self.__file_path
-        else:
-            file_path = self.__create_file_path()
         with FileAccess(file_path, 'w') as file:
             file.writelines(self.__input_contents)
         return None

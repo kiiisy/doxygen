@@ -135,11 +135,11 @@ class Application(tk.Frame):
         op_app.mainloop
 
     def __judge_all_or_part(self, **kwargs):
+        result = self.__part(**kwargs)
         all_target_state = self.__get_all_target_state()
         if all_target_state is True:
-            return self.__all(**kwargs)
-        else:
-            return self.__part(**kwargs)
+            result = self.__all(**kwargs)
+        return result
 
     def __read_items(self):
         file_path = self.__file_path.get()

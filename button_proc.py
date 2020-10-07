@@ -23,10 +23,12 @@ class Extraction:
         regular_expression = self.__regular_expression(target_list, self.__regex)
         target_dict = regular_expression.get_target_name_and_index()
         for target_name, target_index in target_dict.items():
-            doxygen_not_exist = re.RegularExpression.not_exist(target_list, target_index)
-            if doxygen_not_exist:
+            if self.__not_exist_doxygen(target_list, target_index):
                 edited_list.append(target_name)
         return edited_list
+
+    def __not_exist_doxygen(self, target_list, target_index):
+        return re.RegularExpression.not_exist(target_list, target_index)
 
     def __read(self, file_path):
         #instance Read class
@@ -117,15 +119,17 @@ class List:
         after_file_contents = self.__input_file_contents.copy()
         i = 0
         for target_index in target_dict.values():
-            comment = self.__comment()
-            doxygen_not_exist = re.RegularExpression.not_exist(before_file_contents, target_index) 
-            if doxygen_not_exist:
+            comment = self.__comment() 
+            if self.__not_exist_doxygen(before_file_contents, target_index):
                 self.__doxygen_comment =\
                         comment.create_all(before_file_contents, target_index)
                 after_file_contents[(target_index) + i:(target_index) + i] =\
                         self.__doxygen_comment
             i = i + comment.get_doxygen_comment_number()
         return after_file_contents
+
+    def __not_exist_doxygen(self, target_list, target_index):
+        return re.RegularExpression.not_exist(target_list, target_index)
 
     def __comment(self, **kwargs):
         #instance Comment class

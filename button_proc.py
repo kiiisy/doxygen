@@ -41,6 +41,15 @@ class Extraction:
 
 class Insertion(object):
     def insert_(self, file_path):
+        '''
+            1. get a file path.
+            2. read the file contents.
+            3. create a list from file contens.
+                when part type. get a target index.
+                when all type. get a target index.
+            4. edit file contents to read an Write Class.
+            5. set(write) file contents.
+        '''
         raise 'call abstract method'
 
     def _read_contents(self, file_path):
@@ -76,11 +85,20 @@ class Part(Insertion):
     def insert_(self, file_path):
         file_path_ = file_path.get()
         file_contents = super()._read_contents(file_path_)
+        if file_contents is None:
+            return False
         list_ = super()._list(file_contents)
-        target_index = super()._get_function_index(file_contents, self.__target_name)
-        edited_file_contents =\
-            list_.create_part(target_index, **self.__kwargs)
-        super()._set_contents(file_path_, edited_file_contents, self.__save_type)
+        target_index = super()._get_function_index(
+            file_contents,
+            self.__target_name)
+        edited_file_contents = list_.create_part(
+            target_index
+            **self.__kwargs)
+        super()._set_contents(
+            file_path_,
+            edited_file_contents,
+            self.__save_type)
+        return True
 
 
 class All(Insertion):
@@ -90,11 +108,17 @@ class All(Insertion):
     def insert_(self, file_path):
         file_path_ = file_path.get()
         file_contents = super()._read_contents(file_path_)
+        if file_contents is None:
+            return False
         list_ = super()._list(file_contents)
         regex = self.__regular_expression(file_contents, re.REGEX_FUNCTION_NAME)
         target_dict = regex.get_target_name_and_index()
         edited_file_contents = list_.create_all(target_dict)
-        super()._set_contents(file_path_, edited_file_contents, self.__save_type)
+        super()._set_contents(
+            file_path_,
+            edited_file_contents,
+            self.__save_type)
+        return True
 
     def __regular_expression(self, items, regex):
         #instance RegularExpression class
@@ -121,8 +145,9 @@ class List:
         for target_index in target_dict.values():
             comment = self.__comment() 
             if self.__not_exist_doxygen(before_file_contents, target_index):
-                self.__doxygen_comment =\
-                        comment.create_all(before_file_contents, target_index)
+                self.__doxygen_comment = comment.create_all(
+                    before_file_contents,
+                    target_index)
                 after_file_contents[(target_index) + i:(target_index) + i] =\
                         self.__doxygen_comment
             i = i + comment.get_doxygen_comment_number()

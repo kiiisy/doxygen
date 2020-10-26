@@ -9,8 +9,8 @@ class Extraction:
         self.__regex = (re.REGEX_FUNCTION_NAME if regex is None else regex)
 
     def extract(self):
-        target_list = self.__read_items()
-        file_contens = self.__edit_items(target_list)
+        target_lists = self.__read_items()
+        file_contens = self.__edit_items(target_lists)
         return file_contens
 
     def __read_items(self):
@@ -18,14 +18,14 @@ class Extraction:
         read_type = self.__read(file_path)
         return fproc.execute(read_type)
 
-    def __edit_items(self, target_list):
-        edited_list = []
-        regular_expression = self.__regular_expression(target_list, self.__regex)
+    def __edit_items(self, target_lists):
+        edited_lists = []
+        regular_expression = self.__regular_expression(target_lists, self.__regex)
         target_dict = regular_expression.get_target_name_and_index()
         for target_name, target_index in target_dict.items():
-            if self.__not_exist_doxygen(target_list, target_index):
-                edited_list.append(target_name)
-        return edited_list
+            if self.__not_exist_doxygen(target_lists, target_index):
+                edited_lists.append(target_name)
+        return edited_lists
 
     def __not_exist_doxygen(self, target_list, target_index):
         return re.RegularExpression.not_exist(target_list, target_index)
@@ -41,15 +41,6 @@ class Extraction:
 
 class Insertion(object):
     def insert_(self, file_path):
-        '''
-            1. get a file path.
-            2. read the file contents.
-            3. create a list from file contens.
-                when part type. get a target index.
-                when all type. get a target index.
-            4. edit file contents to read an Write Class.
-            5. set(write) file contents.
-        '''
         raise 'call abstract method'
 
     def _read_contents(self, file_path):
@@ -92,7 +83,7 @@ class Part(Insertion):
             file_contents,
             self.__target_name)
         edited_file_contents = list_.create_part(
-            target_index
+            target_index,
             **self.__kwargs)
         super()._set_contents(
             file_path_,
@@ -135,22 +126,24 @@ class List:
         self.__doxygen_comment = comment.create_part(**kwargs)
         file_contents = self.__input_file_contents
         for i in range(len(self.__doxygen_comment)):
+            #対象の後ろに入れるため+1する
             file_contents.insert(function_index + 1 , self.__doxygen_comment[i])
         return file_contents
 
     def create_all(self, target_dict):
         before_file_contents = self.__input_file_contents
         after_file_contents = self.__input_file_contents.copy()
-        i = 0
+        comment_cnt = 0
         for target_index in target_dict.values():
             comment = self.__comment() 
             if self.__not_exist_doxygen(before_file_contents, target_index):
                 self.__doxygen_comment = comment.create_all(
                     before_file_contents,
                     target_index)
-                after_file_contents[(target_index) + i:(target_index) + i] =\
-                        self.__doxygen_comment
-            i = i + comment.get_doxygen_comment_number()
+                after_file_contents[
+                    (target_index) + comment_cnt:
+                    (target_index) + comment_cnt] = self.__doxygen_comment
+            comment_cnt += comment.get_doxygen_comment_number()
         return after_file_contents
 
     def __not_exist_doxygen(self, target_list, target_index):
@@ -238,24 +231,21 @@ class Lookup:
 
     def get_comment(self, file_contents, comment_type):
         return_comments = []
-        i = 0
-        while file_contents[self.__target_index - i] != re.END_POINT:
-            comment = self.__regular_expression(file_contents, comment_type)
-            if comment.exist(self.__target_index, i):
-                return_comments.append(
-                    file_contents[self.__target_index - i])
-                blank_comment = self.__get_blank_comment(file_contents, i)
-                return_comments.extend(blank_comment)
-                return return_comments
-            i = i + 1
-        #前提条件違反の場合はNoneを返却する
+        for file_content, index in self.__reverse(file_contents):
+            if file_content != re.END_POINT:
+                comment = self.__regular_expression(file_contents, comment_type)
+                if comment.exist(index):
+                    return_comments.append(file_content)
+                    blank_comment = self.__get_blank_comment(file_contents, index)
+                    return_comments.extend(blank_comment)
+                    return return_comments
         return None
 
-    def __get_blank_comment(self, file_contents, cnt):
+    def __get_blank_comment(self, file_contents, target_index):
         return_comments = []
-        #対象を含ませないために+1とする
-        hit_index = (self.__target_index - cnt) + 1
-        for file_content in file_contents[hit_index:]:
+        #空白を調べるために対象のインデックスから+1する
+        blank_index = target_index + 1
+        for file_content in file_contents[blank_index:]:
             blank_comment =\
                 self.__regular_expression(file_content, re.REGEX_BLANK)
             if blank_comment.exist():
@@ -263,6 +253,13 @@ class Lookup:
             else:
                 break
         return return_comments
+
+    def __reverse(self, file_contents):
+        #ループ処理での初回-1の調整のために+1する
+        index = self.__target_index + 1
+        for file_content in file_contents[self.__target_index::-1]:
+            index-=1
+            yield file_content, index
 
     def __regular_expression(self, items, regex):
         #instance RegularExpression class

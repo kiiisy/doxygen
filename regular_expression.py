@@ -15,18 +15,18 @@ END_POINT = '/*\n'
 
 
 class RegularExpression:
-    def __init__(self, items, regex):
+    def __init__(self, items, regex: str):
         self.__items = items
         self.__regex = regex
 
-    def get_target_name_and_index(self):
+    def get_target_name_and_index(self) -> dict:
         name_and_index = {}
         for index, item in enumerate(self.__items):
             if re.match(self.__regex, item):
                 name_and_index.update([(item, index)])
         return name_and_index
 
-    def create_comment(self):
+    def create_comment(self) -> list:
         comment = []
         try:
             current_comment_len = len(self.__items)
@@ -41,19 +41,17 @@ class RegularExpression:
             messagebox.showerror('エラー', '前提条件違反です。処理を終了します。')
             sys.exit()
 
-    def exist(self, index=None, cnt=None):
-        if index == None and cnt == None:
+    def exist(self, index=None):
+        if index == None:
             return True if re.match(self.__regex, self.__items) else False
         else:
-            return True if re.match(self.__regex, 
-                self.__items[index - cnt]) else False
+            return True if re.match(self.__regex, self.__items[index]) else False
 
     @classmethod
-    def not_exist(cls, target_list, target_index):
-        i = 0
-        while target_list[target_index - i] != END_POINT:
-            doxygen_comment = cls(target_list[target_index - i], REGEX_DOXYGEN_CHECK)
-            if doxygen_comment.exist():
-                return False
-            i = i + 1
+    def not_exist(cls, target_lists, target_index):
+        for target_list in target_lists[target_index::-1]:
+            if target_list != END_POINT:
+                doxygen_comment = cls(target_list, REGEX_DOXYGEN_CHECK)
+                if doxygen_comment.exist():
+                    return False
         return True

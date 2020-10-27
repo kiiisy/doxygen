@@ -35,7 +35,7 @@ class Application(tk.Frame):
         f1.place(relheight = 0.1, width = 1000, height = 50, x = 20)
         f1_label = tk.Label(f1, text = 'path')
         f1_label.grid(row = 0, column = 0, ipadx = 50, pady = 25)
-        f1_entry = tk.Entry(f1, width = 80, textvariable = self.__file_path)
+        f1_entry = tk.Entry(f1, width = 70, textvariable = self.__file_path)
         f1_entry.grid(row = 0, column = 1, padx = 10)
         f1_button = tk.Button(f1, 
             text = 'update',
@@ -51,7 +51,7 @@ class Application(tk.Frame):
         f2_label.grid(row = 0, column = 0, ipadx = 20)
         self.__target_name.set('')
         self.__f2_opt = tk.OptionMenu(f2, self.__target_name, '')
-        self.__f2_opt.config(width = 80)
+        self.__f2_opt.config(width = 70)
         self.__f2_opt.grid(row = 0, column = 1, padx = 10)
         self.__all_target_state.set(False)
         f2_chk_button = tk.Checkbutton(f2,
@@ -108,10 +108,12 @@ class Application(tk.Frame):
             extracted_contents = target_file.extract()
             opt = self.__f2_opt['menu']
             opt.delete(0, 'last')
-            for content in extracted_contents:
-                opt.add_command(label = content.strip(), 
-                    command = tk._setit(self.__target_name, content))
-            self.__target_name.set(extracted_contents[0])
+            self.__target_name.set('')
+            if extracted_contents != []:
+                for content in extracted_contents:
+                    opt.add_command(label = content.strip(), 
+                        command = tk._setit(self.__target_name, content))
+                self.__target_name.set(extracted_contents[0])
 
     def run(self, **kwargs):
         '''
@@ -123,8 +125,9 @@ class Application(tk.Frame):
             return
         '''
         all_or_part = self.__judge_all_or_part(**kwargs)
-        all_or_part.insert_(self.__file_path)
-        messagebox.showinfo('通知', '完了しました')
+        result = all_or_part.insert_(self.__file_path)
+        if result == True:
+            messagebox.showinfo('通知', '完了しました')
 
     def option(self):
         op_root = op.TKTopLevel()

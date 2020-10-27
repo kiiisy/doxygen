@@ -20,7 +20,9 @@ class Extraction:
 
     def __edit_items(self, target_lists):
         edited_lists = []
-        regular_expression = self.__regular_expression(target_lists, self.__regex)
+        regular_expression = self.__regular_expression(
+            items = target_lists, 
+            regex = self.__regex)
         target_dict = regular_expression.get_target_name_and_index()
         for target_name, target_index in target_dict.items():
             if self.__not_exist_doxygen(target_lists, target_index):
@@ -34,7 +36,7 @@ class Extraction:
         #instance Read class
         return fproc.Read(file_path)
 
-    def __regular_expression(self, items, regex):
+    def __regular_expression(self, *, items, regex):
         #instance RegularExpression class
         return re.RegularExpression(items, regex)
 
@@ -102,7 +104,9 @@ class All(Insertion):
         if file_contents is None:
             return False
         list_ = super()._list(file_contents)
-        regex = self.__regular_expression(file_contents, re.REGEX_FUNCTION_NAME)
+        regex = self.__regular_expression(
+            items = file_contents,
+            regex = re.REGEX_FUNCTION_NAME)
         target_dict = regex.get_target_name_and_index()
         edited_file_contents = list_.create_all(target_dict)
         super()._set_contents(
@@ -111,7 +115,7 @@ class All(Insertion):
             self.__save_type)
         return True
 
-    def __regular_expression(self, items, regex):
+    def __regular_expression(self, *, items, regex):
         #instance RegularExpression class
         return re.RegularExpression(items, regex)
 
@@ -194,7 +198,9 @@ class Comment:
     def __edit_comments(self, object_, file_contents, regex):
         fixed_comment = []
         before_list = object_.get_comment(file_contents, regex)
-        regular_expression = self.__regular_expression(before_list, regex)
+        regular_expression = self.__regular_expression(
+            items = before_list,
+            regex = regex)
         comments = regular_expression.create_comment()
         selected_command = self.__select_doxygen_command(regex)
         for comment in comments:
@@ -220,7 +226,7 @@ class Comment:
         #instance Lookup class
         return Lookup(target_index)
 
-    def __regular_expression(self, items, regex):
+    def __regular_expression(self, *, items, regex):
         #instance RegularExpression class
         return re.RegularExpression(items, regex)
 
@@ -233,7 +239,9 @@ class Lookup:
         return_comments = []
         for file_content, index in self.__reverse(file_contents):
             if file_content != re.END_POINT:
-                comment = self.__regular_expression(file_contents, comment_type)
+                comment = self.__regular_expression(
+                    items = file_contents,
+                    regex = comment_type)
                 if comment.exist(index):
                     return_comments.append(file_content)
                     blank_comment = self.__get_blank_comment(file_contents, index)
@@ -247,7 +255,9 @@ class Lookup:
         blank_index = target_index + 1
         for file_content in file_contents[blank_index:]:
             blank_comment =\
-                self.__regular_expression(file_content, re.REGEX_BLANK)
+                self.__regular_expression(
+                    items = file_content,
+                    regex = re.REGEX_BLANK)
             if blank_comment.exist():
                 return_comments.append(file_content)
             else:
@@ -261,6 +271,6 @@ class Lookup:
             index-=1
             yield file_content, index
 
-    def __regular_expression(self, items, regex):
+    def __regular_expression(self, *, items, regex):
         #instance RegularExpression class
         return re.RegularExpression(items, regex)
